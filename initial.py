@@ -1,18 +1,16 @@
 # Load the data
 import pandas as pd
+import string 
 from pandas.core.interchange.dataframe_protocol import Column
 
 try: 
     # load into pandas
     df = pd.read_csv('metadata.csv', nrows=100)
-# save the subset to a new file
 
- 
+# save the subset to a new file
     df.to_csv ('first_100.csv',index=False)
-    #Print 10 rows
-    print('metadata columns',df.columns)
     #Print first 5 rows
-    print('first 5 rows:',df.iloc[: ,:5])
+    print('first 5 rows:',df.head(4))
     #Check df dimensions
     print('Dimensions:\n',df.shape)
     #Identify data types of each column
@@ -53,7 +51,6 @@ try:
             df[col] = pd.to_datetime(df[col])
         except (ValueError, TypeError):
             pass
-
     # Now extract datetime columns
     date_columns_df = df.select_dtypes(include=['datetime64[ns]'])
     print("\n📅 Columns detected as datetime:\n", date_columns_df)
@@ -78,19 +75,60 @@ try:
     print("📊 Papers per year:\n", papers_per_year)
 
     #identifying top journal publications
-    import pandas as pd
+    # Look for COVID-related terms in title or abstract
+    keywords = "covid|covid-19|coronavirus|sars-cov-2|2019-ncov|ncov"
 
-    # Count how many papers per journal
-    journal_counts = df["journal"].value_counts()
+    covid_mask = (
+    df["title"].str.contains(keywords, case=False, na=False) |
+    df["abstract"].str.contains(keywords, case=False, na=False) |
+    df["journal"].str.contains(keywords, case=False, na=False) |
+    df["source_x"].str.contains(keywords, case=False, na=False)
+)
 
-    # Show the top 10 journals
-    print("📊 Top 10 journals by number of papers:\n", journal_counts.head(5))
+    covid_papers = df[covid_mask]
 
+    covid_journals = covid_papers["journal"].value_counts()
+    print("📊 Top journals publishing COVID-19 research:\n", covid_journals.head(5))
+
+
+    # Convert publish_time to datetime
+    df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
+
+    covid_era_papers = df[df["publish_time"].dt.year >= 2020]
+
+    # Count top journals in this period
+    journals_2020 = covid_era_papers["journal"].value_counts().head(10)
+    print("\n📊 Top journals (2020 onwards):\n", journals_2020)
+
+    # Filter papers published from 2020 onwards
+    covid_era_papers = df[df["publish_time"].dt.year >= 2020]
     
+    #FFREQUENTLY USED WORDS IN TITLES
+    # Take titles, drop missing ones
+    titles = df["title"].dropna().str.lower()
+
+    # Remove punctuation
+    titles = titles.str.replace(f"[{string.punctuation}]", "", regex=True)
+
+    #Define Stopwords
+    stop_words = {"and", "of", "the", "in", "on", "for", "with", "using", "to", "a", "an","on","from","using","by"}
+
+    words = []
+    for title in titles:
+        for word in title.split():
+            if word not in stop_words:
+                words.append(word)
+    
+    # Count word frequencies
+    word_counts = pd.Series(words).value_counts()
+
+    print("📊 Most frequent words in titles:\n", word_counts.head(20))
+
+
+
 except FileNotFoundError:
     print("File not found. Please check the file path.")
 except pd.errors.EmptyDataError:
     print("The file is empty.")
 except pd.errors.ParserError:
     print("The file could not be parsed as CSV.")
-
