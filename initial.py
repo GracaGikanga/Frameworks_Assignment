@@ -1,7 +1,8 @@
 # Load the data
 import pandas as pd
+import matplotlib.pyplot as plt
 import string 
-from pandas.core.interchange.dataframe_protocol import Column
+from wordcloud import WordCloud
 
 try: 
     # load into pandas
@@ -124,7 +125,57 @@ try:
 
     print("📊 Most frequent words in titles:\n", word_counts.head(20))
 
+    #CREATE VISUALS
+    # Number of publications Over time
+    # Plotting Publication over time
+    # Plot
+    plt.figure(figsize=(8,5))
+    plt.plot(papers_per_year.index, papers_per_year.values, marker="o")
+    
 
+    
+    plt.xlabel('Year')
+    plt.ylabel('Papers published')
+    plt.title('Number Of Publications Over time')
+    plt.grid(True)
+    plt.show()
+
+    #Bar Chart On Top Publishing Journals
+
+    # Create wordcloud
+
+
+# --- NEW: Create WordCloud ---
+    wordcloud = WordCloud(
+        width=800,
+        height=400,
+        background_color="white",
+        stopwords=stop_words,
+        colormap="viridis"  # you can try "plasma", "inferno", "coolwarm", etc.
+    ).generate(" ".join(words))  # join list of words into a big string
+
+    # Plot the WordCloud
+    plt.figure(figsize=(12,6))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.title("WordCloud of Paper Titles", fontsize=16)
+    plt.show()
+
+
+    #Plotting distribution of paper counts by source
+    #Filtering papers by source
+    papers_per_source = df["source_x"].value_counts()
+    print("📊 Papers per source:\n", papers_per_source.head(10))
+
+    plt.figure(figsize=(10,6))
+    papers_per_source.plot(kind="bar")
+
+    plt.xlabel("Source")
+    plt.ylabel("Number of Papers")
+    plt.title("Distribution of Papers by Source")
+    plt.xticks(rotation=45, ha="right")  # rotate labels for readability
+    plt.tight_layout()
+    plt.show()
 
 except FileNotFoundError:
     print("File not found. Please check the file path.")
