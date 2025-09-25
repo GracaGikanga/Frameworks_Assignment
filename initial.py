@@ -155,8 +155,13 @@ try:
         df = df.dropna(subset=["journal"])
         df = df[df["journal"].str.lower() != "none"]
 
+
+        # Dropdown for number of journals
+        top_n = st.slider("Select number of top journals to display", 5, 20, 10)
+
+        # Filter and plot
         # --- Get top journals overall ---
-        top_journals = df["journal"].value_counts().head(10)
+        top_journals = df["journal"].value_counts().head(top_n)
 
         # --- Plot ---
         fig, ax = plt.subplots(figsize=(10,6))
@@ -174,6 +179,13 @@ try:
     # Create wordcloud
     def word_cloud():
         df = pd.read_csv("New_data.csv")
+        print(df.shape)
+
+        # Dropdown for colormap
+        colormap = st.selectbox(
+        "Choose a color style for the Word Cloud:",
+        ["viridis", "plasma", "inferno", "coolwarm", "magma", "cividis"])
+        print(f"Selected colormap: {colormap}")
         # Prepare titles
         titles = df["title"].dropna().str.lower()
         titles = titles.str.replace(f"[{string.punctuation}]", "", regex=True)
