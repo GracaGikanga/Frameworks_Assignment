@@ -153,9 +153,23 @@ try:
     #Bar Chart On Top Publishing Journals
 
     # Create wordcloud
+    def word_cloud():
+        df = pd.read_csv("New_data.csv")
+        # Prepare titles
+        titles = df["title"].dropna().str.lower()
+        titles = titles.str.replace(f"[{string.punctuation}]", "", regex=True)
+
+        # Define stopwords
+        stop_words = {"and", "of", "the", "in", "on", "for", "with", "using", "to", "a", "an", "from", "by"}
+
+        # Collect words
+        words = []
+        for title in titles:
+            for word in title.split():
+                if word not in stop_words:
+                    words.append(word)
 
 
-        # --- NEW: Create WordCloud ---
         wordcloud = WordCloud(
             width=800,
             height=400,
@@ -164,12 +178,13 @@ try:
             colormap="viridis"  # you can try "plasma", "inferno", "coolwarm", etc.
         ).generate(" ".join(words))  # join list of words into a big string
 
-        # Plot the WordCloud
-        plt.figure(figsize=(12,6))
-        plt.imshow(wordcloud, interpolation="bilinear")
-        plt.axis("off")
-        plt.title("WordCloud of Paper Titles", fontsize=16)
-        plt.show()
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.imshow(wordcloud, interpolation="bilinear")
+        ax.axis("off")
+        ax.set_title("WordCloud of Paper Titles", fontsize=16)
+
+        return fig 
 
 
         #Plotting distribution of paper counts by source
