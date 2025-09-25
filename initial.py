@@ -7,10 +7,10 @@ from wordcloud import WordCloud
 
 try: 
     # load into pandas
-    df = pd.read_csv('metadata.csv', nrows=100)
+    df = pd.read_csv('metadata.csv', nrows= 50000)
 
 # save the subset to a new file
-    df.to_csv ('first_100.csv',index=False)
+    df.to_csv ('first_50000.csv',index=False)
     #Print first 5 rows
     print('first 5 rows:',df.head(4))
     #Check df dimensions
@@ -40,19 +40,11 @@ try:
     df.drop_duplicates(inplace=True)
 
         #Save to data to a new file
-    df.to_csv('New_data.csv', index=False)
+    df.to_csv('First_7000_cleaned.csv',index=False)
     print('Success!Data cleaned and saved')
 
     #Prepare Data for Analysis
     #Filter date columns
-    #converting objects to datatypes
-
-    # Converting all columns to datetime
-    for col in df.columns:
-        try:
-            df[col] = pd.to_datetime(df[col])
-        except (ValueError, TypeError):
-            pass
     # Now extract datetime columns
     date_columns_df = df.select_dtypes(include=['datetime64[ns]'])
     print("\n📅 Columns detected as datetime:\n", date_columns_df)
@@ -95,14 +87,18 @@ try:
     # Convert publish_time to datetime
     df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
 
-    covid_era_papers = df[df["publish_time"].dt.year >= 2020]
-
-    # Count top journals in this period
-    journals_2020 = covid_era_papers["journal"].value_counts().head(10)
-    print("\n📊 Top journals (2020 onwards):\n", journals_2020)
-
     # Filter papers published from 2020 onwards
     covid_era_papers = df[df["publish_time"].dt.year >= 2020]
+    print("\n📅 Papers from 2020 onwards:\n", covid_era_papers.shape[0])
+
+    # Drop rows where journal is missing
+    covid_era_papers = covid_era_papers.dropna(subset=["journal"])
+
+    # Count top journals in this period
+    journals_2020 = covid_era_papers["journal"].value_counts().head(5)
+    print("\n📊 Top journals (2020 onwards):\n", journals_2020)
+
+    
     
     #FFREQUENTLY USED WORDS IN TITLES
     # Take titles, drop missing ones
@@ -151,6 +147,28 @@ try:
         return fig
 
     #Bar Chart On Top Publishing Journals
+    def top_publications():
+        df = pd.read_csv("First_50000.csv")
+        print(df.shape)
+        # Drop missing or 'none' journals
+        df = df.dropna(subset=["journal"])
+        df = df[df["journal"].str.lower() != "none"]
+
+        # --- Get top journals overall ---
+        top_journals = df["journal"].value_counts().head(10)
+
+        # --- Plot ---
+        fig, ax = plt.subplots(figsize=(10,6))
+        top_journals.plot(kind="bar", ax=ax, color="lightcoral", edgecolor="black")
+
+        ax.set_xlabel("Journal")
+        ax.set_ylabel("Number of Papers")
+        ax.set_title("Top Journals (All Papers)")
+        ax.tick_params(axis="x", rotation=45)
+
+        plt.tight_layout()
+        return fig
+
 
     # Create wordcloud
     def word_cloud():
