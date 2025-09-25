@@ -8,7 +8,8 @@ from wordcloud import WordCloud
 try: 
     # load into pandas
     df = pd.read_csv('metadata.csv', nrows= 50000)
-
+    print(df.shape)
+    print('Data loaded successfully')
 # save the subset to a new file
     df.to_csv ('first_50000.csv',index=False)
     #Print first 5 rows
@@ -207,19 +208,27 @@ try:
 
         #Plotting distribution of paper counts by source
         #Filtering papers by source
-        papers_per_source = df["source_x"].value_counts()
-        print("📊 Papers per source:\n", papers_per_source.head(10))
+    def plot_papers_by_source():
+        # Load data
+        df = pd.read_csv("First_50000.csv")
+        print(df.shape)
+        # Drop missing values in source column
+        df = df.dropna(subset=["source_x"])
 
-        plt.figure(figsize=(10,6))
-        papers_per_source.plot(kind="bar")
+        # Count papers per source
+        papers_per_source = df["source_x"].value_counts().head(10)  # top 10 sources
 
-        plt.xlabel("Source")
-        plt.ylabel("Number of Papers")
-        plt.title("Distribution of Papers by Source")
-        plt.xticks(rotation=45, ha="right")  # rotate labels for readability
+        # Create figure
+        fig, ax = plt.subplots(figsize=(10,6))
+        papers_per_source.plot(kind="bar", ax=ax)
+
+        ax.set_xlabel("Source")
+        ax.set_ylabel("Number of Papers")
+        ax.set_title("Distribution of Papers by Source")
+        ax.tick_params(axis="x", rotation=45)
+
         plt.tight_layout()
-        plt.show()
-
+        return fig
 
     
 
