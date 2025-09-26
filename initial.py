@@ -7,11 +7,10 @@ from wordcloud import WordCloud
 
 try: 
     # load into pandas
-    df = pd.read_csv('metadata.csv', nrows= 50000)
+    df = pd.read_csv ('metadata.csv', nrows= 50000, low_memory=False)
     print(df.shape)
     print('Data loaded successfully')
-# save the subset to a new file
-    df.to_csv ('first_50000.csv',index=False)
+
     #Print first 5 rows
     print('first 5 rows:',df.head(4))
     #Check df dimensions
@@ -27,12 +26,12 @@ try:
     missing_count = df.isnull().sum()
     print('Missing values per column:\n',missing_count)
     
-    # --- Fill numeric columns ---
+    # --- Fill missing numeric columns ---
     num_cols = df.select_dtypes(include=["number"]).columns
     df[num_cols] = df[num_cols].fillna(0)
     print("Filled numeric columns with 0:\n", df[num_cols], "\n")
 
-    # --- Fill non-numeric columns ---
+    # --- Fill missing non-numeric columns ---
     non_num_cols = df.select_dtypes(exclude=["number"]).columns
     df[non_num_cols] = df[non_num_cols].fillna("none")
     print("Filled non-numeric columns with 'none':\n", df[non_num_cols], "\n")
@@ -41,12 +40,12 @@ try:
     df.drop_duplicates(inplace=True)
 
         #Save to data to a new file
-    df.to_csv('First_7000_cleaned.csv',index=False)
+    df.to_csv('First_50000_cleaned.csv',index=False)
     print('Success!Data cleaned and saved')
 
     #Prepare Data for Analysis
     #Filter date columns
-    # Now extract datetime columns
+    # Extract datetime columns
     date_columns_df = df.select_dtypes(include=['datetime64[ns]'])
     print("\n📅 Columns detected as datetime:\n", date_columns_df)
 
@@ -57,8 +56,7 @@ try:
     # Part 3: Data Analysis and Visualization
     # Perform Basuc Analysis
     # Convert publish_time to datetime
-    #add a year Column
-
+    
     df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
 
     # Extract the year
@@ -78,9 +76,9 @@ try:
     df["journal"].str.contains(keywords, case=False, na=False) |
     df["source_x"].str.contains(keywords, case=False, na=False)
 )
-
+    #Identify covid_papers
     covid_papers = df[covid_mask]
-
+    #Find Covid related researches
     covid_journals = covid_papers["journal"].value_counts()
     print("📊 Top journals publishing COVID-19 research:\n", covid_journals.head(5))
 
@@ -109,7 +107,7 @@ try:
     titles = titles.str.replace(f"[{string.punctuation}]", "", regex=True)
 
     #Define Stopwords
-    stop_words = {"and", "of", "the", "in", "on", "for", "with", "using", "to", "a", "an","on","from","using","by"}
+    stop_words = {"and", "of", "the", "in", "on", "for", "with", "using", "to", "a", "an","on","from","using","by","as"}
 
     words = []
     for title in titles:
@@ -128,8 +126,10 @@ try:
     # Plot
 
     def plot_publications():
-        df = pd.read_csv("New_data.csv")
+        df = pd.read_csv("First_50000_cleaned.csv")
+        print(df.shape)
 
+        sample_df = df.head(5)
         # Convert publish_time to datetime
         df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
     
@@ -145,12 +145,13 @@ try:
         ax.set_title("Publications Over Time")
         ax.grid(True)
 
-        return fig
+        return fig, sample_df
 
-    #Bar Chart On Top Publishing Journals
+    #Bar Chart Of Top Publishing Journals
     def top_publications():
-        df = pd.read_csv("First_50000.csv")
+        df = pd.read_csv("First_50000_cleaned.csv")
         print(df.shape)
+        sample_df = df.head(5)
         # Drop missing or 'none' journals
         df = df.dropna(subset=["journal"])
         df = df[df["journal"].str.lower() != "none"]
@@ -173,12 +174,12 @@ try:
         ax.tick_params(axis="x", rotation=45)
 
         plt.tight_layout()
-        return fig
+        return fig, sample_df
 
 
     # Create wordcloud
     def word_cloud():
-        df = pd.read_csv("New_data.csv")
+        df = pd.read_csv("First_50000_cleaned.csv")
         print(df.shape)
 
         # Dropdown for colormap
@@ -222,8 +223,9 @@ try:
         #Filtering papers by source
     def plot_papers_by_source():
         # Load data
-        df = pd.read_csv("First_50000.csv")
+        df = pd.read_csv("First_50000_cleaned.csv")
         print(df.shape)
+        sample_df = df.head(5)
         # Drop missing values in source column
         df = df.dropna(subset=["source_x"])
 
@@ -240,7 +242,7 @@ try:
         ax.tick_params(axis="x", rotation=45)
 
         plt.tight_layout()
-        return fig
+        return fig, sample_df
 
     
 
